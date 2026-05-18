@@ -15,15 +15,17 @@ public class PlanetGeneratorEditor : Editor
     public override void OnInspectorGUI()
     {
         serializedObject.Update();
-
         DrawDefaultInspector();
 
         EditorGUILayout.Space();
         EditorGUILayout.LabelField("Actions", EditorStyles.boldLabel);
 
+        // Generate + Save — only triggered manually via button
         if (GUILayout.Button("Generate Planet"))
         {
             planet.GeneratePlanet();
+            if (planet.shapeGenerator != null)
+                planet.shapeGenerator.GenerateAndSave();
         }
 
         if (planet.shapeGenerator == null)
@@ -44,6 +46,10 @@ public class PlanetGeneratorEditor : Editor
         {
             EditorGUILayout.Space();
             EditorGUILayout.LabelField("Shape Settings", EditorStyles.boldLabel);
+            EditorGUILayout.HelpBox(
+                "Tweak values below to preview. Click 'Generate Planet' to save the mesh permanently.",
+                MessageType.Info
+            );
 
             CreateCachedEditor(
                 planet.shapeGenerator.shapeSettings,
@@ -54,10 +60,10 @@ public class PlanetGeneratorEditor : Editor
             using (var check = new EditorGUI.ChangeCheckScope())
             {
                 shapeEditor.OnInspectorGUI();
-
                 if (check.changed)
                 {
                     EditorUtility.SetDirty(planet.shapeGenerator.shapeSettings);
+                    // Only regenerate shape for live preview, do NOT save
                     planet.GeneratePlanet();
                 }
             }

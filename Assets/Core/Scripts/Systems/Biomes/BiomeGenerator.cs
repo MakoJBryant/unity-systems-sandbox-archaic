@@ -11,6 +11,7 @@ public static class BiomeGenerator
         var biomes = biomeSettings.biomes;
         Texture2D texture = new Texture2D(resolution, 1, TextureFormat.RGBA32, false)
         {
+            name = "BiomeTexture",
             filterMode = FilterMode.Bilinear,
             wrapMode = TextureWrapMode.Clamp
         };

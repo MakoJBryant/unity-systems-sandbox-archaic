@@ -7,20 +7,25 @@ public class PlanetCameraController : MonoBehaviour
     public Transform planet;
     public Transform cameraPivot;
     public Camera cam;
+    public PlanetMover planetMover;
 
     [Header("Settings")]
-    public float mouseSensitivity = 5f;
+    public float mouseSensitivity = 2f;
     public float minPitch = -80f;
     public float maxPitch = 80f;
     public float cameraDistance = 4f;
     public float cameraCollisionRadius = 0.3f;
 
-    float pitch;
+    float pitch = 0f;
 
     void Start()
     {
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
+
+        // Auto-find PlanetMover if not assigned
+        if (planetMover == null && player != null)
+            planetMover = player.GetComponent<PlanetMover>();
     }
 
     void Update()
@@ -34,24 +39,23 @@ public class PlanetCameraController : MonoBehaviour
 
     void LateUpdate()
     {
+        if (player == null || planet == null || cameraPivot == null || cam == null)
+            return;
+
         Vector3 gravityUp = (player.position - planet.position).normalized;
 
-        // FIXED: RAW mouse input
-        float mouseX = Input.GetAxisRaw("Mouse X") * mouseSensitivity;
+        // Pitch — same sensitivity as yaw in PlanetMover
         float mouseY = Input.GetAxisRaw("Mouse Y") * mouseSensitivity;
-
-        // Rotate player (yaw)
-        player.rotation =
-            Quaternion.AngleAxis(mouseX, gravityUp) * player.rotation;
-
-        // Pitch
         pitch -= mouseY;
         pitch = Mathf.Clamp(pitch, minPitch, maxPitch);
-        cameraPivot.localRotation = Quaternion.Euler(pitch, 0f, 0f);
 
-        // Camera positioning + collision
-        Vector3 desiredCamPos =
-            cameraPivot.position - cameraPivot.forward * cameraDistance;
+        // Follow player position and rotation exactly — no lag
+        cameraPivot.position = player.position;
+        cameraPivot.rotation = Quaternion.LookRotation(player.forward, gravityUp);
+        cameraPivot.localRotation = cameraPivot.localRotation * Quaternion.Euler(pitch, 0f, 0f);
+
+        // Camera position + collision
+        Vector3 desiredCamPos = cameraPivot.position - cameraPivot.forward * cameraDistance;
 
         if (Physics.SphereCast(
             cameraPivot.position,
@@ -66,7 +70,6 @@ public class PlanetCameraController : MonoBehaviour
         }
 
         cam.transform.position = desiredCamPos;
-        cam.transform.rotation =
-            Quaternion.LookRotation(cameraPivot.position - cam.transform.position, gravityUp);
+        cam.transform.LookAt(cameraPivot.position, gravityUp);
     }
 }

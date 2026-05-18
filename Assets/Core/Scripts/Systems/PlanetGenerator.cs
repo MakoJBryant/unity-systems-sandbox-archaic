@@ -43,12 +43,6 @@ public class PlanetGenerator : MonoBehaviour
         GeneratePlanet();
     }
 
-    void OnValidate()
-    {
-        if (shapeGenerator && biomeSettings && oceanSettings && atmosphereSettings)
-            GeneratePlanet();
-    }
-
     [ContextMenu("Generate Planet Now")]
     public void GeneratePlanet()
     {
@@ -58,16 +52,25 @@ public class PlanetGenerator : MonoBehaviour
         if (shapeGenerator.shapeSettings == null)
             return;
 
+        meshRenderer = GetComponent<MeshRenderer>();
+
         // 1. Generate shape + terrain
         shapeGenerator.GenerateShape();
 
         float minElevation = shapeGenerator.MinElevation;
         float maxElevation = shapeGenerator.MaxElevation;
-        float radius = shapeGenerator.radius;
+        float radius = shapeGenerator.radius * transform.localScale.x;
 
-        // 2. Biome texture
+        // 2. Generate biome texture
         biomeTexture = BiomeGenerator.GenerateBiomeTexture(biomeSettings);
 
+#if UNITY_EDITOR
+        // Only save assets outside of play mode to prevent reimport freeze
+        if (!UnityEditor.EditorApplication.isPlayingOrWillChangePlaymode)
+            biomeTexture = PlanetVisualUpdater.SaveBiomeTexture(biomeTexture);
+#endif
+
+        // 3. Apply material properties
         PlanetVisualUpdater.ApplyMaterialProperties(
             meshRenderer.sharedMaterial,
             radius,

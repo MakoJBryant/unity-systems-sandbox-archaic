@@ -8,7 +8,6 @@ namespace MakoJBryant.SolarSystem.Generation
     {
         [Range(2, 256)]
         public int resolution = 64;
-
         public float radius = 1000f;
 
         [Header("Settings")]
@@ -26,6 +25,17 @@ namespace MakoJBryant.SolarSystem.Generation
             meshFilter = GetComponent<MeshFilter>();
             meshCollider = GetComponent<MeshCollider>();
 
+#if UNITY_EDITOR
+            Mesh savedMesh = UnityEditor.AssetDatabase.LoadAssetAtPath<Mesh>(
+                "Assets/Core/Visuals/Meshes/PlanetMesh.asset");
+            if (savedMesh != null)
+            {
+                mesh = savedMesh;
+                meshFilter.sharedMesh = mesh;
+                meshCollider.sharedMesh = mesh;
+                return;
+            }
+#endif
             if (mesh == null)
             {
                 mesh = new Mesh { name = "Planet Shape Mesh" };
@@ -35,8 +45,16 @@ namespace MakoJBryant.SolarSystem.Generation
 
         public void GenerateShape()
         {
-            if (shapeSettings == null || shapeSettings.noiseLayers == null || shapeSettings.noiseLayers.Length == 0)
+            if (shapeSettings == null ||
+                shapeSettings.noiseLayers == null ||
+                shapeSettings.noiseLayers.Length == 0)
                 return;
+
+            meshFilter = GetComponent<MeshFilter>();
+            meshCollider = GetComponent<MeshCollider>();
+
+            // Always use a fresh in-memory mesh, never write directly to saved asset
+            mesh = new Mesh { name = "Planet Shape Mesh" };
 
             // 1. Create unit sphere
             SphereCreator.CreateSphereMesh(
@@ -73,7 +91,70 @@ namespace MakoJBryant.SolarSystem.Generation
             mesh.RecalculateNormals();
             mesh.RecalculateBounds();
 
+            meshFilter.sharedMesh = mesh;
+            meshCollider.sharedMesh = null;
             meshCollider.sharedMesh = mesh;
         }
+
+        // Only called from editor button, never automatically
+        public void GenerateAndSave()
+        {
+            GenerateShape();
+#if UNITY_EDITOR
+            // Never save during or after play mode — causes reimport freeze
+            if (!UnityEditor.EditorApplication.isPlayingOrWillChangePlaymode)
+                SaveMeshAsset();
+#endif
+        }
+
+#if UNITY_EDITOR
+        private void SaveMeshAsset()
+        {
+            string folderPath = "Assets/Core/Visuals/Meshes";
+            string assetPath = $"{folderPath}/PlanetMesh.asset";
+
+            if (!UnityEditor.AssetDatabase.IsValidFolder(folderPath))
+                UnityEditor.AssetDatabase.CreateFolder("Assets/Core/Visuals", "Meshes");
+
+            // Snapshot data before touching existing asset
+            Vector3[] verts = mesh.vertices;
+            int[] tris = mesh.triangles;
+            Vector2[] uvs = mesh.uv;
+
+            Mesh existingMesh = UnityEditor.AssetDatabase.LoadAssetAtPath<Mesh>(assetPath);
+            if (existingMesh != null)
+            {
+                existingMesh.Clear();
+                existingMesh.vertices = verts;
+                existingMesh.triangles = tris;
+                existingMesh.uv = uvs;
+                existingMesh.RecalculateNormals();
+                existingMesh.RecalculateBounds();
+
+                meshFilter.sharedMesh = existingMesh;
+                meshCollider.sharedMesh = null;
+                meshCollider.sharedMesh = existingMesh;
+
+                UnityEditor.EditorUtility.SetDirty(existingMesh);
+            }
+            else
+            {
+                Mesh savedMesh = new Mesh { name = "PlanetMesh" };
+                savedMesh.vertices = verts;
+                savedMesh.triangles = tris;
+                savedMesh.uv = uvs;
+                savedMesh.RecalculateNormals();
+                savedMesh.RecalculateBounds();
+
+                UnityEditor.AssetDatabase.CreateAsset(savedMesh, assetPath);
+
+                meshFilter.sharedMesh = savedMesh;
+                meshCollider.sharedMesh = null;
+                meshCollider.sharedMesh = savedMesh;
+            }
+
+            UnityEditor.AssetDatabase.SaveAssets();
+        }
+#endif
     }
 }
