@@ -2,84 +2,79 @@ using UnityEngine;
 
 namespace MakoJBryant.SolarSystem.Generation
 {
-    public static class OceanGenerator
+    [RequireComponent(typeof(MeshFilter), typeof(MeshRenderer))]
+    public class OceanGenerator : MonoBehaviour
     {
-        public static GameObject GenerateOcean(
-            Transform parent,
-            int resolution,
-            float minElevation,
-            float maxElevation,
-            float seaLevel,
-            OceanSettings oceanSettings,
-            ref GameObject oceanGO,
-            ref MeshFilter oceanMeshFilter,
-            ref MeshRenderer oceanMeshRenderer,
-            ref Mesh oceanMesh,
-            float manualOceanSize = 0f) // <-- NEW optional size
+        [Header("Settings")]
+        public OceanSettings settings;
+
+        [Header("Sea Level")]
+        [Range(0f, 1f)]
+        public float seaLevel = 0.5f;
+        public float manualOceanRadius = 0f;
+
+        private MeshFilter meshFilter;
+        private MeshRenderer meshRenderer;
+        private Mesh mesh;
+
+        public void Generate(int resolution, float minElevation, float maxElevation)
         {
-            // Destroy duplicates
-            for (int i = parent.childCount - 1; i >= 0; i--)
+            if (settings == null)
             {
-                Transform child = parent.GetChild(i);
-                if (child.name == "Ocean" && child.gameObject != oceanGO)
-                {
-                    Object.DestroyImmediate(child.gameObject);
-                }
+                Debug.LogWarning("[OceanGenerator] No OceanSettings assigned!");
+                return;
             }
 
-            if (oceanGO == null)
+            meshFilter = GetComponent<MeshFilter>();
+            meshRenderer = GetComponent<MeshRenderer>();
+
+            if (mesh == null)
             {
-                oceanGO = new GameObject("Ocean");
-                oceanGO.name = "Ocean";
-                oceanGO.transform.SetParent(parent, false);
-                oceanMeshFilter = oceanGO.AddComponent<MeshFilter>();
-                oceanMeshRenderer = oceanGO.AddComponent<MeshRenderer>();
-                oceanMesh = new Mesh { name = "Generated Ocean Mesh" };
-                oceanMeshFilter.sharedMesh = oceanMesh;
+                mesh = new Mesh { name = "Generated Ocean Mesh" };
+                meshFilter.sharedMesh = mesh;
             }
 
-            oceanMesh.Clear();
+            mesh.Clear();
 
-            float oceanRadius;
+            float oceanRadius = manualOceanRadius > 0f
+                ? manualOceanRadius
+                : Mathf.Lerp(minElevation, maxElevation, seaLevel);
 
-            if (manualOceanSize > 0f)
+            Debug.Log($"[OceanGenerator] OceanRadius: {oceanRadius} | MinElev: {minElevation} | MaxElev: {maxElevation} | SeaLevel: {seaLevel}");
+
+            SphereCreator.CreateSphereMesh(
+                resolution, oceanRadius,
+                out Vector3[] vertices,
+                out int[] triangles,
+                out Vector2[] uv);
+
+            mesh.vertices = vertices;
+            mesh.triangles = triangles;
+            mesh.uv = uv;
+            mesh.RecalculateNormals();
+            mesh.RecalculateBounds();
+
+            if (settings.oceanMaterial != null)
             {
-                // Use manual size if specified
-                oceanRadius = manualOceanSize;
+                meshRenderer.sharedMaterial = settings.oceanMaterial;
+                meshRenderer.sharedMaterial.SetFloat("_Radius", oceanRadius);
+                meshRenderer.sharedMaterial.SetColor("_Color", settings.oceanColor);
+                meshRenderer.sharedMaterial.SetVector("_PlanetCenter",
+                    transform.parent ? transform.parent.position : Vector3.zero);
             }
             else
             {
-                // Old behavior: interpolate between min and max terrain
-                oceanRadius = Mathf.Lerp(minElevation, maxElevation * 0.999f, seaLevel);
+                Debug.LogWarning("[OceanGenerator] OceanSettings has no material assigned!");
             }
 
-            // Create the sphere mesh
-            SphereCreator.CreateSphereMesh(resolution, oceanRadius, out Vector3[] vertices, out int[] triangles, out Vector2[] uv);
+            meshRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            meshRenderer.receiveShadows = false;
 
-            oceanMesh.vertices = vertices;
-            oceanMesh.triangles = triangles;
-            oceanMesh.uv = uv;
+            transform.localPosition = Vector3.zero;
+            transform.localRotation = Quaternion.identity;
+            transform.localScale = Vector3.one;
 
-            oceanMesh.RecalculateNormals();
-            oceanMesh.RecalculateBounds();
-
-            // Assign material
-            if (oceanMeshRenderer != null && oceanSettings.oceanMaterial != null)
-            {
-                oceanMeshRenderer.sharedMaterial = oceanSettings.oceanMaterial;
-                oceanMeshRenderer.sharedMaterial.SetFloat("_Radius", oceanRadius);
-                oceanMeshRenderer.sharedMaterial.SetColor("_Color", oceanSettings.oceanColor);
-                oceanMeshRenderer.sharedMaterial.SetVector("_PlanetCenter", parent.position);
-            }
-
-            // Reset transform
-            oceanGO.transform.localPosition = Vector3.zero;
-            oceanGO.transform.localRotation = Quaternion.identity;
-            oceanGO.transform.localScale = Vector3.one;
-
-            Debug.Log($"Ocean Radius: {oceanRadius}, Transform Scale: {oceanGO.transform.localScale}");
-
-            return oceanGO;
+            Debug.Log($"[OceanGenerator] Mesh has {mesh.vertexCount} vertices. Material: {meshRenderer.sharedMaterial?.name}");
         }
     }
 }

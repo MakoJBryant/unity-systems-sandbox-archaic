@@ -23,7 +23,6 @@ public class PlanetCameraController : MonoBehaviour
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
 
-        // Auto-find PlanetMover if not assigned
         if (planetMover == null && player != null)
             planetMover = player.GetComponent<PlanetMover>();
     }
@@ -44,15 +43,16 @@ public class PlanetCameraController : MonoBehaviour
 
         Vector3 gravityUp = (player.position - planet.position).normalized;
 
-        // Pitch — same sensitivity as yaw in PlanetMover
+        // Accumulate pitch from mouse Y
         float mouseY = Input.GetAxisRaw("Mouse Y") * mouseSensitivity;
         pitch -= mouseY;
         pitch = Mathf.Clamp(pitch, minPitch, maxPitch);
 
-        // Follow player position and rotation exactly — no lag
+        // Set pivot position to player
         cameraPivot.position = player.position;
-        cameraPivot.rotation = Quaternion.LookRotation(player.forward, gravityUp);
-        cameraPivot.localRotation = cameraPivot.localRotation * Quaternion.Euler(pitch, 0f, 0f);
+
+        // Apply pitch on top of player's world rotation in one clean operation
+        cameraPivot.rotation = player.rotation * Quaternion.Euler(pitch, 0f, 0f);
 
         // Camera position + collision
         Vector3 desiredCamPos = cameraPivot.position - cameraPivot.forward * cameraDistance;

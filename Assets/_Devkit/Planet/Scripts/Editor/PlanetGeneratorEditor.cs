@@ -20,50 +20,44 @@ public class PlanetGeneratorEditor : Editor
         EditorGUILayout.Space();
         EditorGUILayout.LabelField("Actions", EditorStyles.boldLabel);
 
-        // Generate + Save — only triggered manually via button
         if (GUILayout.Button("Generate Planet"))
         {
             planet.GeneratePlanet();
-            if (planet.shapeGenerator != null)
-                planet.shapeGenerator.GenerateAndSave();
+            if (planet.terrain != null)
+                planet.terrain.GenerateAndSave();
         }
 
-        if (planet.shapeGenerator == null)
+        if (planet.terrain == null)
         {
             EditorGUILayout.HelpBox(
-                "ShapeGenerator is not assigned. PlanetGenerator needs a ShapeGenerator component.",
-                MessageType.Warning
-            );
+                "Terrain reference is not assigned. Drag the Terrain child GameObject here.",
+                MessageType.Warning);
         }
-        else if (planet.shapeGenerator.shapeSettings == null)
+        else if (planet.terrain.shapeSettings == null)
         {
             EditorGUILayout.HelpBox(
-                "ShapeSettings asset is not assigned on the ShapeGenerator.",
-                MessageType.Warning
-            );
+                "ShapeSettings asset is not assigned on the Terrain.",
+                MessageType.Warning);
         }
         else
         {
             EditorGUILayout.Space();
             EditorGUILayout.LabelField("Shape Settings", EditorStyles.boldLabel);
             EditorGUILayout.HelpBox(
-                "Tweak values below to preview. Click 'Generate Planet' to save the mesh permanently.",
-                MessageType.Info
-            );
+                "Tweak values below to preview. Click 'Generate Planet' to save permanently.",
+                MessageType.Info);
 
             CreateCachedEditor(
-                planet.shapeGenerator.shapeSettings,
+                planet.terrain.shapeSettings,
                 null,
-                ref shapeEditor
-            );
+                ref shapeEditor);
 
             using (var check = new EditorGUI.ChangeCheckScope())
             {
                 shapeEditor.OnInspectorGUI();
                 if (check.changed)
                 {
-                    EditorUtility.SetDirty(planet.shapeGenerator.shapeSettings);
-                    // Only regenerate shape for live preview, do NOT save
+                    EditorUtility.SetDirty(planet.terrain.shapeSettings);
                     planet.GeneratePlanet();
                 }
             }
