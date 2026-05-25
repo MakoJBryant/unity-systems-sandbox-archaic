@@ -17,6 +17,10 @@ public class PlanetGenerator : MonoBehaviour
     public float rotationSpeed = 10f;
     public float axialTilt = 23.5f;
 
+    [Header("Orbit")]
+    public Transform sun;
+    public float orbitSpeed = 1f;
+
     [Header("Gravity")]
     public float gravityStrength = 9.8f;
 
@@ -38,7 +42,7 @@ public class PlanetGenerator : MonoBehaviour
 
         float radius = terrain.radius;
 
-        // Normalized elevations for shader (values around 1.0)
+        // Normalized elevations for shader
         float minElevNormalized = terrain.MinElevation;
         float maxElevNormalized = terrain.MaxElevation;
 
@@ -88,8 +92,23 @@ public class PlanetGenerator : MonoBehaviour
     {
         if (Application.isPlaying)
         {
+            // Rotate planet on its own axis
             transform.Rotate(Vector3.up, rotationSpeed * Time.deltaTime, Space.Self);
+
+            // Orbit around sun
+            if (sun != null)
+            {
+                transform.RotateAround(
+                    sun.position,
+                    Vector3.up,
+                    orbitSpeed * Time.deltaTime
+                );
+            }
         }
     }
 
+    void OnDestroy()
+    {
+        // Biome texture is a persistent asset — no cleanup needed
+    }
 }
