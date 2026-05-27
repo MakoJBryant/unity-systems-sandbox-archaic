@@ -10,15 +10,15 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 53dc8487821b4414599b79b6a5b5a332, type: 3}
-  m_Name: Layer3
+  m_Name: Continents
   m_EditorClassIdentifier: 
   enabled: 1
-  strength: 0.5
-  roughness: 4
-  octaves: 5
+  strength: 0.4
+  roughness: 1
+  octaves: 3
   persistence: 0.5
   lacunarity: 2
   offset: {x: 20, y: 10, z: 15}
-  minValue: 0
-  noiseType: 1
+  minValue: -0.5
+  noiseType: 0
   useFirstLayerAsMask: 0

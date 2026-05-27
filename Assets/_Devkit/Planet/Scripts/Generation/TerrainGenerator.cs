@@ -16,9 +16,7 @@ namespace MakoJBryant.SolarSystem.Generation
         public TerrainShapeSettings shapeSettings;
         public TerrainColorSettings colorSettings;
 
-        [Range(-1f, 1f)]
-        public float globalHeightOffset = 0f;
-
+        // Runtime wrapper instances (future override system)
         public NoiseLayerInstance[] layerInstances;
 
         private MeshFilter meshFilter;
@@ -34,11 +32,14 @@ namespace MakoJBryant.SolarSystem.Generation
             meshCollider = GetComponent<MeshCollider>();
         }
 
+        // =====================================================
+        // INITIALIZE INSTANCE WRAPPERS
+        // =====================================================
         private void EnsureInitialized()
         {
             if (shapeSettings == null || shapeSettings.noiseLayers == null)
             {
-                Debug.LogError("[TerrainGenerator] Missing ShapeSettings.");
+                Debug.LogError("[TerrainGenerator] Missing ShapeSettings or noise layers.");
                 return;
             }
 
@@ -53,7 +54,7 @@ namespace MakoJBryant.SolarSystem.Generation
                 layerInstances[i] = new NoiseLayerInstance
                 {
                     layer = shapeSettings.noiseLayers[i],
-                    enabledOverride = true
+                    enabled = true
                 };
             }
         }
@@ -64,6 +65,17 @@ namespace MakoJBryant.SolarSystem.Generation
 
             EnsureInitialized();
 
+            if (shapeSettings == null ||
+                shapeSettings.noiseLayers == null ||
+                shapeSettings.noiseLayers.Length == 0)
+            {
+                Debug.LogWarning("[TerrainGenerator] No shape settings found.");
+                return;
+            }
+
+            // =====================================================
+            // BASE SPHERE (UNIT SPACE)
+            // =====================================================
             SphereCreator.CreateSphereMesh(
                 resolution,
                 1f,
@@ -71,9 +83,13 @@ namespace MakoJBryant.SolarSystem.Generation
                 out int[] triangles,
                 out Vector2[] uvs);
 
+            // =====================================================
+            // TERRAIN DEFORMATION (NORMALIZED SPACE)
+            // =====================================================
             TerrainDeformer.ApplyTerrainDeformation(
                 vertices,
-                layerInstances,
+                shapeSettings.noiseLayers,
+                shapeSettings.globalHeightOffset,
                 out Vector3[] displaced,
                 out float min,
                 out float max);
@@ -81,12 +97,17 @@ namespace MakoJBryant.SolarSystem.Generation
             MinElevation = min;
             MaxElevation = max;
 
-            // FINAL SCALE ONLY (important fix)
+            // =====================================================
+            // FINAL WORLD SCALE (ONLY ONCE — IMPORTANT)
+            // =====================================================
             for (int i = 0; i < displaced.Length; i++)
             {
                 displaced[i] *= radius;
             }
 
+            // =====================================================
+            // BUILD MESH
+            // =====================================================
             mesh = new Mesh { name = "Planet Terrain Mesh" };
 
             mesh.vertices = displaced;
@@ -133,6 +154,7 @@ namespace MakoJBryant.SolarSystem.Generation
             if (existingMesh != null)
             {
                 existingMesh.Clear();
+
                 existingMesh.vertices = verts;
                 existingMesh.triangles = tris;
                 existingMesh.uv = uvs;

@@ -6,7 +6,8 @@ namespace MakoJBryant.SolarSystem.Generation
     {
         public static void ApplyTerrainDeformation(
             Vector3[] baseVertices,
-            NoiseLayerInstance[] layerInstances,
+            NoiseLayer[] layers,
+            float globalHeightOffset,
             out Vector3[] displacedVertices,
             out float minElevation,
             out float maxElevation)
@@ -16,9 +17,9 @@ namespace MakoJBryant.SolarSystem.Generation
             minElevation = float.MaxValue;
             maxElevation = float.MinValue;
 
-            if (layerInstances == null || layerInstances.Length == 0)
+            if (layers == null || layers.Length == 0)
             {
-                Debug.LogError("[TerrainDeformer] Missing layer instances.");
+                Debug.LogError("[TerrainDeformer] Missing noise layers.");
                 return;
             }
 
@@ -26,37 +27,24 @@ namespace MakoJBryant.SolarSystem.Generation
             {
                 Vector3 normal = baseVertices[i].normalized;
 
-                float displacement = 0f;
+                float displacement = globalHeightOffset;
                 float firstLayerValue = 0f;
-                bool firstCaptured = false;
 
-                for (int l = 0; l < layerInstances.Length; l++)
+                for (int l = 0; l < layers.Length; l++)
                 {
-                    NoiseLayerInstance inst = layerInstances[l];
+                    NoiseLayer layer = layers[l];
 
-                    if (inst == null || inst.layer == null)
+                    if (layer == null || !layer.enabled)
                         continue;
-
-                    if (!inst.enabledOverride)
-                        continue;
-
-                    NoiseLayer layer = inst.layer;
-
-                    float strength = inst.overrideStrength ? inst.strength : layer.strength;
-                    float roughness = inst.overrideRoughness ? inst.roughness : layer.roughness;
-                    float persistence = inst.overridePersistence ? inst.persistence : layer.persistence;
-                    float lacunarity = inst.overrideLacunarity ? inst.lacunarity : layer.lacunarity;
-                    int octaves = inst.overrideOctaves ? inst.octaves : layer.octaves;
-                    Vector3 offset = inst.overrideOffset ? inst.offset : layer.offset;
 
                     float noise = 0f;
                     float amplitude = 1f;
-                    float frequency = roughness;
+                    float frequency = layer.roughness;
                     float totalAmplitude = 0f;
 
-                    for (int o = 0; o < octaves; o++)
+                    for (int o = 0; o < layer.octaves; o++)
                     {
-                        Vector3 p = (normal + offset) * frequency;
+                        Vector3 p = (normal + layer.offset) * frequency;
 
                         float v = PerlinNoise3D.GenerateNoise(p.x, p.y, p.z);
                         v = v * 2f - 1f;
@@ -64,34 +52,32 @@ namespace MakoJBryant.SolarSystem.Generation
                         noise += v * amplitude;
                         totalAmplitude += amplitude;
 
-                        amplitude *= persistence;
-                        frequency *= lacunarity;
+                        amplitude *= layer.persistence;
+                        frequency *= layer.lacunarity;
                     }
 
                     float layerValue =
                         totalAmplitude == 0f ? 0f : noise / totalAmplitude;
 
-                    if (!firstCaptured)
-                    {
+                    if (l == 0)
                         firstLayerValue = layerValue;
-                        firstCaptured = true;
-                    }
 
                     if (layer.useFirstLayerAsMask && firstLayerValue <= 0f)
-                        continue;
+                        layerValue = 0f;
 
-                    displacement += layerValue * strength;
+                    displacement += layerValue * layer.strength;
                 }
 
-                // IMPORTANT FIX: keep unit sphere space
-                Vector3 displaced = normal * (1f + displacement);
+                float finalRadius = 1f + displacement;
+
+                Vector3 displaced = normal * finalRadius;
 
                 displacedVertices[i] = displaced;
 
-                float h = displaced.magnitude;
+                float height = displaced.magnitude;
 
-                minElevation = Mathf.Min(minElevation, h);
-                maxElevation = Mathf.Max(maxElevation, h);
+                minElevation = Mathf.Min(minElevation, height);
+                maxElevation = Mathf.Max(maxElevation, height);
             }
         }
     }

@@ -7,7 +7,11 @@ namespace MakoJBryant.SolarSystem.Generation
         menuName = "Solar System/Terrain Shape Settings")]
     public class TerrainShapeSettings : ScriptableObject
     {
-        [Tooltip("Noise layers used for procedural terrain deformation.")]
+        [Header("Global Shape Controls")]
+        [Range(-1f, 1f)]
+        public float globalHeightOffset = 0f;
+
+        [Header("Noise Layers")]
         public NoiseLayer[] noiseLayers;
     }
 }
