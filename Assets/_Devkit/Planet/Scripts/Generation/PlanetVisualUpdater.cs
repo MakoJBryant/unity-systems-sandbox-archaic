@@ -8,28 +8,33 @@ public static class PlanetVisualUpdater
         float minHeight,
         float maxHeight,
         Vector3 center,
-        Texture2D biomeTex,
-        float biomeShift = 0f)
+        Texture2D terrainColorTex,
+        float terrainColorShift = 0f)
     {
         if (mat == null) return;
+
         mat.SetFloat("_Radius", radius);
-        mat.SetFloat("_MinHeight", minHeight + biomeShift);
+        mat.SetFloat("_MinHeight", minHeight + terrainColorShift);
         mat.SetFloat("_MaxHeight", maxHeight);
         mat.SetVector("_PlanetCenter", center);
-        if (biomeTex != null)
-            mat.SetTexture("_BiomeTexture", biomeTex);
+
+        if (terrainColorTex != null)
+            mat.SetTexture("_TerrainColorMap", terrainColorTex);
     }
 
 #if UNITY_EDITOR
-    public static Texture2D SaveBiomeTexture(Texture2D texture)
+    public static Texture2D SaveTerrainColorTexture(Texture2D texture)
     {
         string folderPath = "Assets/_Devkit/Planet/Textures";
-        string assetPath = $"{folderPath}/BiomeTexture.asset";
+        string assetPath = $"{folderPath}/TerrainColorMap.asset";
 
         if (!UnityEditor.AssetDatabase.IsValidFolder(folderPath))
-            UnityEditor.AssetDatabase.CreateFolder("Assets/Core/Visuals", "Textures");
+        {
+            UnityEditor.AssetDatabase.CreateFolder("Assets/_Devkit/Planet", "Textures");
+        }
 
         Texture2D existing = UnityEditor.AssetDatabase.LoadAssetAtPath<Texture2D>(assetPath);
+
         if (existing != null)
         {
             UnityEditor.EditorUtility.CopySerialized(texture, existing);

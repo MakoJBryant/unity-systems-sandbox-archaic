@@ -5,61 +5,89 @@ using MakoJBryant.SolarSystem.Generation;
 [ExecuteInEditMode]
 public class PlanetGenerator : MonoBehaviour
 {
-    [Header("Subsystem References")]
-    public ShapeGenerator terrain;
+    // =========================================================
+    // SUBSYSTEM REFERENCES
+    // =========================================================
+
+    public TerrainGenerator terrain;
     public OceanGenerator ocean;
     public AtmosphereGenerator atmosphere;
 
-    [Header("Biome Settings")]
-    public BiomeSettings biomeSettings;
+    // =========================================================
+    // PLANET PROPERTIES
+    // =========================================================
 
-    [Header("Planet Properties")]
     public float rotationSpeed = 10f;
     public float axialTilt = 23.5f;
-
-    [Header("Orbit")]
     public Transform sun;
     public float orbitSpeed = 1f;
-
-    [Header("Gravity")]
     public float gravityStrength = 9.8f;
 
-    private MeshRenderer meshRenderer;
-    private Texture2D biomeTexture;
+    // =========================================================
+    // INTERNALS
+    // =========================================================
 
-    void Awake()
+    private MeshRenderer meshRenderer;
+    private Texture2D terrainColorTexture;
+
+    private void Awake()
     {
-        transform.rotation = Quaternion.Euler(axialTilt, 0f, 0f);
+        transform.rotation =
+            Quaternion.Euler(axialTilt, 0f, 0f);
     }
 
     [ContextMenu("Generate Planet")]
     public void GeneratePlanet()
     {
-        if (terrain == null) return;
+        if (terrain == null)
+        {
+            Debug.LogWarning("[PlanetGenerator] TerrainGenerator is missing.");
+            return;
+        }
 
-        // 1. Generate terrain shape
-        terrain.GenerateShape();
+        // =====================================================
+        // 1. GENERATE TERRAIN
+        // =====================================================
+
+        terrain.GenerateTerrain();
 
         float radius = terrain.radius;
 
-        // Normalized elevations for shader
+        // Normalized elevation range
         float minElevNormalized = terrain.MinElevation;
         float maxElevNormalized = terrain.MaxElevation;
 
-        // World scale elevations for ocean/atmosphere
+        // World-space elevation range
         float minElevation = terrain.MinElevation * radius;
         float maxElevation = terrain.MaxElevation * radius;
 
-        // 2. Generate biome texture
-        biomeTexture = BiomeGenerator.GenerateBiomeTexture(biomeSettings);
+        // =====================================================
+        // 2. GENERATE TERRAIN COLOR TEXTURE
+        // =====================================================
+
+        if (terrain.colorSettings != null)
+        {
+            terrainColorTexture =
+                TerrainColorGenerator.GenerateColorTexture(
+                    terrain.colorSettings);
 
 #if UNITY_EDITOR
-        if (!UnityEditor.EditorApplication.isPlayingOrWillChangePlaymode)
-            biomeTexture = PlanetVisualUpdater.SaveBiomeTexture(biomeTexture);
+            if (!UnityEditor.EditorApplication.isPlayingOrWillChangePlaymode)
+            {
+                terrainColorTexture =
+                    PlanetVisualUpdater.SaveTerrainColorTexture(
+                        terrainColorTexture);
+            }
 #endif
+        }
 
-        // 3. Apply material properties to terrain using normalized elevations
-        meshRenderer = terrain.GetComponent<MeshRenderer>();
+        // =====================================================
+        // 3. APPLY TERRAIN MATERIALS
+        // =====================================================
+
+        meshRenderer =
+            terrain.GetComponent<MeshRenderer>();
+
         if (meshRenderer != null)
         {
             PlanetVisualUpdater.ApplyMaterialProperties(
@@ -68,47 +96,63 @@ public class PlanetGenerator : MonoBehaviour
                 minElevNormalized,
                 maxElevNormalized,
                 transform.position,
-                biomeTexture
+                terrainColorTexture
             );
         }
 
-        // 4. Generate ocean using world scale elevations
-        if (ocean != null)
-            ocean.Generate(terrain.resolution, minElevation, maxElevation);
+        // =====================================================
+        // 4. GENERATE OCEAN
+        // =====================================================
 
-        // 5. Generate atmosphere using world scale radius
+        if (ocean != null)
+        {
+            ocean.Generate(
+                terrain.resolution,
+                minElevation,
+                maxElevation);
+        }
+
+        // =====================================================
+        // 5. GENERATE ATMOSPHERE
+        // =====================================================
+
         if (atmosphere != null)
-            atmosphere.Generate(terrain.resolution, radius, maxElevation);
+        {
+            atmosphere.Generate(
+                terrain.resolution,
+                radius,
+                maxElevation);
+        }
     }
 
     public void GenerateAndSave()
     {
         GeneratePlanet();
+
         if (terrain != null)
+        {
             terrain.GenerateAndSave();
+        }
     }
 
-    void Update()
+    private void Update()
     {
         if (Application.isPlaying)
         {
-            // Rotate planet on its own axis
-            transform.Rotate(Vector3.up, rotationSpeed * Time.deltaTime, Space.Self);
+            // Planet rotation
+            transform.Rotate(
+                Vector3.up,
+                rotationSpeed * Time.deltaTime,
+                Space.Self);
 
-            // Orbit around sun
+            // Planet orbit
             if (sun != null)
             {
                 transform.RotateAround(
                     sun.position,
                     Vector3.up,
-                    orbitSpeed * Time.deltaTime
-                );
+                    orbitSpeed * Time.deltaTime);
             }
         }
-    }
-
-    void OnDestroy()
-    {
-        // Biome texture is a persistent asset — no cleanup needed
     }
 }

@@ -1,68 +1,112 @@
-using UnityEngine;
 using UnityEditor;
+using UnityEngine;
 
 [CustomEditor(typeof(PlanetGenerator))]
 public class PlanetGeneratorEditor : Editor
 {
-    PlanetGenerator planet;
-    Editor shapeEditor;
+    private PlanetGenerator planet;
 
-    void OnEnable()
+    private SerializedProperty terrainProp;
+    private SerializedProperty oceanProp;
+    private SerializedProperty atmosphereProp;
+
+    private SerializedProperty rotationSpeedProp;
+    private SerializedProperty axialTiltProp;
+    private SerializedProperty sunProp;
+    private SerializedProperty orbitSpeedProp;
+    private SerializedProperty gravityStrengthProp;
+
+    private void OnEnable()
     {
         planet = (PlanetGenerator)target;
+
+        terrainProp =
+            serializedObject.FindProperty("terrain");
+
+        oceanProp =
+            serializedObject.FindProperty("ocean");
+
+        atmosphereProp =
+            serializedObject.FindProperty("atmosphere");
+
+        rotationSpeedProp =
+            serializedObject.FindProperty("rotationSpeed");
+
+        axialTiltProp =
+            serializedObject.FindProperty("axialTilt");
+
+        sunProp =
+            serializedObject.FindProperty("sun");
+
+        orbitSpeedProp =
+            serializedObject.FindProperty("orbitSpeed");
+
+        gravityStrengthProp =
+            serializedObject.FindProperty("gravityStrength");
     }
 
     public override void OnInspectorGUI()
     {
         serializedObject.Update();
-        DrawDefaultInspector();
 
-        EditorGUILayout.Space();
+        DrawActionsSection();
+
+        EditorGUILayout.Space(10);
+
+        DrawSubsystemReferencesSection();
+
+        EditorGUILayout.Space(10);
+
+        DrawPlanetPropertiesSection();
+
+        serializedObject.ApplyModifiedProperties();
+    }
+
+    private void DrawActionsSection()
+    {
         EditorGUILayout.LabelField("Actions", EditorStyles.boldLabel);
 
         if (GUILayout.Button("Generate Planet"))
         {
             planet.GeneratePlanet();
+
             if (planet.terrain != null)
+            {
                 planet.terrain.GenerateAndSave();
+            }
         }
+    }
+
+    private void DrawSubsystemReferencesSection()
+    {
+        EditorGUILayout.LabelField("Subsystem References", EditorStyles.boldLabel);
+
+        EditorGUILayout.PropertyField(terrainProp);
+        EditorGUILayout.PropertyField(oceanProp);
+        EditorGUILayout.PropertyField(atmosphereProp);
 
         if (planet.terrain == null)
         {
             EditorGUILayout.HelpBox(
-                "Terrain reference is not assigned. Drag the Terrain child GameObject here.",
+                "TerrainGenerator reference is not assigned.",
                 MessageType.Warning);
         }
-        else if (planet.terrain.shapeSettings == null)
-        {
-            EditorGUILayout.HelpBox(
-                "ShapeSettings asset is not assigned on the Terrain.",
-                MessageType.Warning);
-        }
-        else
-        {
-            EditorGUILayout.Space();
-            EditorGUILayout.LabelField("Shape Settings", EditorStyles.boldLabel);
-            EditorGUILayout.HelpBox(
-                "Tweak values below to preview. Click 'Generate Planet' to save permanently.",
-                MessageType.Info);
+    }
 
-            CreateCachedEditor(
-                planet.terrain.shapeSettings,
-                null,
-                ref shapeEditor);
+    private void DrawPlanetPropertiesSection()
+    {
+        EditorGUILayout.LabelField("Planet Properties", EditorStyles.boldLabel);
 
-            using (var check = new EditorGUI.ChangeCheckScope())
-            {
-                shapeEditor.OnInspectorGUI();
-                if (check.changed)
-                {
-                    EditorUtility.SetDirty(planet.terrain.shapeSettings);
-                    planet.GeneratePlanet();
-                }
-            }
-        }
+        EditorGUILayout.PropertyField(sunProp);
 
-        serializedObject.ApplyModifiedProperties();
+        EditorGUILayout.Space(4);
+
+        EditorGUILayout.PropertyField(rotationSpeedProp);
+        EditorGUILayout.PropertyField(orbitSpeedProp);
+        EditorGUILayout.PropertyField(axialTiltProp);
+
+        EditorGUILayout.Space(4);
+
+        EditorGUILayout.PropertyField(gravityStrengthProp);
     }
 }

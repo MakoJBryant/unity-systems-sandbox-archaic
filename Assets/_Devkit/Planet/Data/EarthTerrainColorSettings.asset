@@ -10,22 +10,22 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 54cd2839993355f4e967938b75ab5d1b, type: 3}
-  m_Name: EarthBiomeSettings
+  m_Name: EarthTerrainColorSettings
   m_EditorClassIdentifier: 
-  biomes:
+  regions:
   - name: Sand
-    color: {r: 0.827451, g: 0.85490197, b: 0.85882354, a: 1}
+    color: {r: 0.8490566, g: 0.8411202, b: 0.7168921, a: 0}
     startHeight: 0
-    blendAmount: 0.1
+    blendAmount: 0
   - name: Grass
-    color: {r: 0.23921569, g: 0.45490196, b: 0.22352941, a: 1}
-    startHeight: 0.4
-    blendAmount: 0.25
+    color: {r: 0.30137736, g: 0.5, b: 0.2948113, a: 0}
+    startHeight: 0.3
+    blendAmount: 0.05
   - name: Mountain
-    color: {r: 0.46666667, g: 0.44313726, b: 0.4117647, a: 1}
+    color: {r: 0.5, g: 0.38828716, b: 0.2806604, a: 0}
     startHeight: 0.6
     blendAmount: 0.1
   - name: Snow
-    color: {r: 1, g: 1, b: 1, a: 1}
-    startHeight: 0.7
-    blendAmount: 0.1
+    color: {r: 1, g: 1, b: 1, a: 0}
+    startHeight: 0.8
+    blendAmount: 0.05

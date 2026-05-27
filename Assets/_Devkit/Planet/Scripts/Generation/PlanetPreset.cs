@@ -15,7 +15,7 @@ namespace MakoJBryant.SolarSystem.Generation
         public float orbitalRadius = 0f;
 
         [Header("Assigned Settings Assets")]
-        public ShapeSettings shapeSettings;
+        public TerrainShapeSettings shapeSettings;
 
         [Header("Prefab References (Optional)")]
         public GameObject planetPrefab;
