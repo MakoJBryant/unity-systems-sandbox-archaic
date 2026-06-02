@@ -2,6 +2,8 @@
 
 A Unity project serving as a versatile sandbox for exploring and implementing core game systems, with a strong focus on **procedural planet generation** and advanced **atmosphere and planet surface shaders**. This repository showcases a systematic approach to building scalable and visually rich interactive environments.
 
+<img width="1919" height="1079" alt="Screenshot 2026-05-26 191527" src="https://github.com/user-attachments/assets/2a9d4653-325d-44f5-b68f-f103b8355df3" />
+
 ## ✨ Features
 
 * **Procedural Planet Generation:** Dynamically generates unique planetary terrains and meshes using algorithmic approaches.
