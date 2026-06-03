@@ -32,9 +32,12 @@ public class PlanetGenerator : MonoBehaviour
 
     private void Awake()
     {
-        transform.rotation =
-            Quaternion.Euler(axialTilt, 0f, 0f);
+        transform.rotation = Quaternion.Euler(axialTilt, 0f, 0f);
     }
+
+    // =========================================================
+    // GENERATE — preview in editor, no disk writes
+    // =========================================================
 
     [ContextMenu("Generate Planet")]
     public void GeneratePlanet()
@@ -45,31 +48,33 @@ public class PlanetGenerator : MonoBehaviour
             return;
         }
 
-        // =====================================================
+        // -------------------------------------------------
         // 1. GENERATE TERRAIN
-        // =====================================================
+        // -------------------------------------------------
 
         terrain.GenerateTerrain();
 
         float radius = terrain.radius;
 
-        // Normalized elevation range
         float minElevNormalized = terrain.MinElevation;
         float maxElevNormalized = terrain.MaxElevation;
 
-        // World-space elevation range
         float minElevation = terrain.MinElevation * radius;
         float maxElevation = terrain.MaxElevation * radius;
 
-        // =====================================================
+        // -------------------------------------------------
         // 2. GENERATE TERRAIN COLOR TEXTURE
-        // =====================================================
+        //    Pass actual elevation range so texture h values
+        //    match what the shader samples
+        // -------------------------------------------------
 
         if (terrain.colorSettings != null)
         {
             terrainColorTexture =
                 TerrainColorGenerator.GenerateColorTexture(
-                    terrain.colorSettings);
+                    terrain.colorSettings,
+                    terrain.MinElevation,
+                    terrain.MaxElevation);
 
 #if UNITY_EDITOR
             if (!UnityEditor.EditorApplication.isPlayingOrWillChangePlaymode)
@@ -81,12 +86,11 @@ public class PlanetGenerator : MonoBehaviour
 #endif
         }
 
-        // =====================================================
+        // -------------------------------------------------
         // 3. APPLY TERRAIN MATERIALS
-        // =====================================================
+        // -------------------------------------------------
 
-        meshRenderer =
-            terrain.GetComponent<MeshRenderer>();
+        meshRenderer = terrain.GetComponent<MeshRenderer>();
 
         if (meshRenderer != null)
         {
@@ -100,9 +104,9 @@ public class PlanetGenerator : MonoBehaviour
             );
         }
 
-        // =====================================================
+        // -------------------------------------------------
         // 4. GENERATE OCEAN
-        // =====================================================
+        // -------------------------------------------------
 
         if (ocean != null)
         {
@@ -112,9 +116,9 @@ public class PlanetGenerator : MonoBehaviour
                 maxElevation);
         }
 
-        // =====================================================
+        // -------------------------------------------------
         // 5. GENERATE ATMOSPHERE
-        // =====================================================
+        // -------------------------------------------------
 
         if (atmosphere != null)
         {
@@ -125,27 +129,38 @@ public class PlanetGenerator : MonoBehaviour
         }
     }
 
-    public void GenerateAndSave()
-    {
-        GeneratePlanet();
+    // =========================================================
+    // SAVE — writes mesh asset to disk, separate from generate
+    // =========================================================
 
-        if (terrain != null)
+    [ContextMenu("Save Planet")]
+    public void SavePlanet()
+    {
+        if (terrain == null)
         {
-            terrain.GenerateAndSave();
+            Debug.LogWarning("[PlanetGenerator] TerrainGenerator is missing — nothing to save.");
+            return;
         }
+
+#if UNITY_EDITOR
+        terrain.Save();
+        Debug.Log("[PlanetGenerator] Planet saved.");
+#endif
     }
+
+    // =========================================================
+    // RUNTIME
+    // =========================================================
 
     private void Update()
     {
         if (Application.isPlaying)
         {
-            // Planet rotation
             transform.Rotate(
                 Vector3.up,
                 rotationSpeed * Time.deltaTime,
                 Space.Self);
 
-            // Planet orbit
             if (sun != null)
             {
                 transform.RotateAround(
@@ -154,5 +169,17 @@ public class PlanetGenerator : MonoBehaviour
                     orbitSpeed * Time.deltaTime);
             }
         }
+    }
+
+    private void OnValidate()
+    {
+        if (terrain == null)
+            terrain = GetComponentInChildren<TerrainGenerator>();
+
+        if (ocean == null)
+            ocean = GetComponentInChildren<OceanGenerator>();
+
+        if (atmosphere == null)
+            atmosphere = GetComponentInChildren<AtmosphereGenerator>();
     }
 }

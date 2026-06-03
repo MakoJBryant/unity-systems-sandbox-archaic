@@ -33,9 +33,9 @@ namespace MakoJBryant.SolarSystem.Generation
         }
 
         // =====================================================
-        // INITIALIZE INSTANCE WRAPPERS
+        // REBUILD LAYER INSTANCES — always fresh, never cached
         // =====================================================
-        private void EnsureInitialized()
+        private void RebuildLayerInstances()
         {
             if (shapeSettings == null || shapeSettings.noiseLayers == null)
             {
@@ -43,10 +43,7 @@ namespace MakoJBryant.SolarSystem.Generation
                 return;
             }
 
-            if (layerInstances != null &&
-                layerInstances.Length == shapeSettings.noiseLayers.Length)
-                return;
-
+            // Always rebuild so ScriptableObject changes are always picked up
             layerInstances = new NoiseLayerInstance[shapeSettings.noiseLayers.Length];
 
             for (int i = 0; i < layerInstances.Length; i++)
@@ -63,7 +60,7 @@ namespace MakoJBryant.SolarSystem.Generation
         {
             Debug.Log("[TerrainGenerator] GenerateTerrain CALLED");
 
-            EnsureInitialized();
+            RebuildLayerInstances();
 
             if (shapeSettings == null ||
                 shapeSettings.noiseLayers == null ||
@@ -121,10 +118,8 @@ namespace MakoJBryant.SolarSystem.Generation
             meshCollider.sharedMesh = mesh;
         }
 
-        public void GenerateAndSave()
+        public void Save()
         {
-            GenerateTerrain();
-
 #if UNITY_EDITOR
             if (!UnityEditor.EditorApplication.isPlayingOrWillChangePlaymode)
                 SaveMeshAsset();

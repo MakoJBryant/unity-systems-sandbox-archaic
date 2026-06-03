@@ -93,6 +93,10 @@ Material:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - _TerrainColorMap:
+        m_Texture: {fileID: 2800000, guid: 1e29a867474ba1b47b0144f264726858, type: 2}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - _ToonRamp:
         m_Texture: {fileID: 2800000, guid: 58ee86aefe4249144a357c85361af9e4, type: 3}
         m_Scale: {x: 1, y: 1}

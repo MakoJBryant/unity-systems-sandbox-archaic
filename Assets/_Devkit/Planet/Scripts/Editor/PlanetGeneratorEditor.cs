@@ -1,3 +1,4 @@
+﻿using MakoJBryant.SolarSystem.Generation;
 using UnityEditor;
 using UnityEngine;
 
@@ -9,7 +10,6 @@ public class PlanetGeneratorEditor : Editor
     private SerializedProperty terrainProp;
     private SerializedProperty oceanProp;
     private SerializedProperty atmosphereProp;
-
     private SerializedProperty rotationSpeedProp;
     private SerializedProperty axialTiltProp;
     private SerializedProperty sunProp;
@@ -20,29 +20,14 @@ public class PlanetGeneratorEditor : Editor
     {
         planet = (PlanetGenerator)target;
 
-        terrainProp =
-            serializedObject.FindProperty("terrain");
-
-        oceanProp =
-            serializedObject.FindProperty("ocean");
-
-        atmosphereProp =
-            serializedObject.FindProperty("atmosphere");
-
-        rotationSpeedProp =
-            serializedObject.FindProperty("rotationSpeed");
-
-        axialTiltProp =
-            serializedObject.FindProperty("axialTilt");
-
-        sunProp =
-            serializedObject.FindProperty("sun");
-
-        orbitSpeedProp =
-            serializedObject.FindProperty("orbitSpeed");
-
-        gravityStrengthProp =
-            serializedObject.FindProperty("gravityStrength");
+        terrainProp = serializedObject.FindProperty("terrain");
+        oceanProp = serializedObject.FindProperty("ocean");
+        atmosphereProp = serializedObject.FindProperty("atmosphere");
+        rotationSpeedProp = serializedObject.FindProperty("rotationSpeed");
+        axialTiltProp = serializedObject.FindProperty("axialTilt");
+        sunProp = serializedObject.FindProperty("sun");
+        orbitSpeedProp = serializedObject.FindProperty("orbitSpeed");
+        gravityStrengthProp = serializedObject.FindProperty("gravityStrength");
     }
 
     public override void OnInspectorGUI()
@@ -50,13 +35,9 @@ public class PlanetGeneratorEditor : Editor
         serializedObject.Update();
 
         DrawActionsSection();
-
         EditorGUILayout.Space(10);
-
         DrawSubsystemReferencesSection();
-
         EditorGUILayout.Space(10);
-
         DrawPlanetPropertiesSection();
 
         serializedObject.ApplyModifiedProperties();
@@ -66,15 +47,33 @@ public class PlanetGeneratorEditor : Editor
     {
         EditorGUILayout.LabelField("Actions", EditorStyles.boldLabel);
 
+        // Resolve missing refs before any button action runs
+        void EnsureRefs()
+        {
+            if (planet.terrain == null)
+                planet.terrain = planet.GetComponentInChildren<TerrainGenerator>();
+            if (planet.ocean == null)
+                planet.ocean = planet.GetComponentInChildren<OceanGenerator>();
+            if (planet.atmosphere == null)
+                planet.atmosphere = planet.GetComponentInChildren<AtmosphereGenerator>();
+        }
+
+        // Generate — preview only, no disk writes
         if (GUILayout.Button("Generate Planet"))
         {
+            AssetDatabase.SaveAssets(); // flush any pending SO changes first
+            EnsureRefs();
             planet.GeneratePlanet();
-
-            if (planet.terrain != null)
-            {
-                planet.terrain.GenerateAndSave();
-            }
         }
+
+        // Save — writes mesh asset to disk
+        EditorGUI.BeginDisabledGroup(planet.terrain == null);
+        if (GUILayout.Button("Save Planet"))
+        {
+            EnsureRefs();
+            planet.SavePlanet();
+        }
+        EditorGUI.EndDisabledGroup();
     }
 
     private void DrawSubsystemReferencesSection()
@@ -98,15 +97,11 @@ public class PlanetGeneratorEditor : Editor
         EditorGUILayout.LabelField("Planet Properties", EditorStyles.boldLabel);
 
         EditorGUILayout.PropertyField(sunProp);
-
         EditorGUILayout.Space(4);
-
         EditorGUILayout.PropertyField(rotationSpeedProp);
         EditorGUILayout.PropertyField(orbitSpeedProp);
         EditorGUILayout.PropertyField(axialTiltProp);
-
         EditorGUILayout.Space(4);
-
         EditorGUILayout.PropertyField(gravityStrengthProp);
     }
 }

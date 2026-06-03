@@ -100,9 +100,6 @@
             "m_Id": "6d4c7294d66645ca86819e25b7c7dc9d"
         },
         {
-            "m_Id": "1e651f37afcb4578a3daa857996473b7"
-        },
-        {
             "m_Id": "9501a1440e1546b1851360d9d0f63103"
         },
         {
@@ -563,7 +560,7 @@
     "m_Type": "UnityEditor.ShaderGraph.Texture2DMaterialSlot",
     "m_ObjectId": "022d66c1c0d849eaa3b5db95ab9d7f80",
     "m_Id": 0,
-    "m_DisplayName": "BiomeTexture",
+    "m_DisplayName": "TerrainColorMap",
     "m_SlotType": 1,
     "m_Hidden": false,
     "m_ShaderOutputName": "Out",
@@ -614,10 +611,10 @@
     "m_Guid": {
         "m_GuidSerialized": "45132ccc-7fab-4ca0-9835-63f44d2d1f65"
     },
-    "m_Name": "BiomeTexture",
+    "m_Name": "TerrainColorMap",
     "m_DefaultRefNameVersion": 1,
-    "m_RefNameGeneratedByDisplayName": "BiomeTexture",
-    "m_DefaultReferenceName": "_BiomeTexture",
+    "m_RefNameGeneratedByDisplayName": "TerrainColorMap",
+    "m_DefaultReferenceName": "_TerrainColorMap",
     "m_OverrideReferenceName": "",
     "m_GeneratePropertyBlock": true,
     "m_UseCustomSlotLabel": false,
@@ -823,42 +820,6 @@
         "e32": 0.0,
         "e33": 1.0
     }
-}
-
-{
-    "m_SGVersion": 0,
-    "m_Type": "UnityEditor.ShaderGraph.NormalVectorNode",
-    "m_ObjectId": "1e651f37afcb4578a3daa857996473b7",
-    "m_Group": {
-        "m_Id": ""
-    },
-    "m_Name": "Normal Vector",
-    "m_DrawState": {
-        "m_Expanded": true,
-        "m_Position": {
-            "serializedVersion": "2",
-            "x": 2163.0,
-            "y": -3273.499755859375,
-            "width": 208.0,
-            "height": 313.5
-        }
-    },
-    "m_Slots": [
-        {
-            "m_Id": "66d7ff187e184ee7998a159c9644b38d"
-        }
-    ],
-    "synonyms": [
-        "surface direction"
-    ],
-    "m_Precision": 0,
-    "m_PreviewExpanded": true,
-    "m_DismissedVersion": 0,
-    "m_PreviewMode": 2,
-    "m_CustomColors": {
-        "m_SerializableColors": []
-    },
-    "m_Space": 2
 }
 
 {
@@ -1550,29 +1511,6 @@
         "b": 0.5,
         "a": 1.0
     }
-}
-
-{
-    "m_SGVersion": 0,
-    "m_Type": "UnityEditor.ShaderGraph.Vector3MaterialSlot",
-    "m_ObjectId": "66d7ff187e184ee7998a159c9644b38d",
-    "m_Id": 0,
-    "m_DisplayName": "Out",
-    "m_SlotType": 1,
-    "m_Hidden": false,
-    "m_ShaderOutputName": "Out",
-    "m_StageCapability": 3,
-    "m_Value": {
-        "x": 0.0,
-        "y": 0.0,
-        "z": 1.0
-    },
-    "m_DefaultValue": {
-        "x": 0.0,
-        "y": 0.0,
-        "z": 1.0
-    },
-    "m_Labels": []
 }
 
 {

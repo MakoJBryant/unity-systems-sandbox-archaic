@@ -13,5 +13,5 @@ MonoBehaviour:
   m_Name: EarthOceanSettings
   m_EditorClassIdentifier: 
   oceanMaterial: {fileID: 2100000, guid: a138f77458ee8e34c85a873c8c3d370c, type: 2}
-  oceanColor: {r: 0, g: 0.2, b: 0.6, a: 1}
+  oceanColor: {r: 0.16470589, g: 0.3647059, b: 0.4509804, a: 1}
   seaLevel: 1

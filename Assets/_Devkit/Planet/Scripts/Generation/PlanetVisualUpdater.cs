@@ -29,11 +29,10 @@ public static class PlanetVisualUpdater
         string assetPath = $"{folderPath}/TerrainColorMap.asset";
 
         if (!UnityEditor.AssetDatabase.IsValidFolder(folderPath))
-        {
             UnityEditor.AssetDatabase.CreateFolder("Assets/_Devkit/Planet", "Textures");
-        }
 
-        Texture2D existing = UnityEditor.AssetDatabase.LoadAssetAtPath<Texture2D>(assetPath);
+        Texture2D existing =
+            UnityEditor.AssetDatabase.LoadAssetAtPath<Texture2D>(assetPath);
 
         if (existing != null)
         {
